@@ -27,7 +27,7 @@ void resize(DynamicArray *arr) {
         } else {
             printf("Failed to resize.\n");
         }
-    } else if (size == (capacity / 4)) { // decrease the size
+    } else if (size <= (capacity / 4)) { // decrease the size
         DynamicArrayEntry *temp = (DynamicArrayEntry *) realloc(arr->entries, (capacity / 2) * sizeof(DynamicArrayEntry));
         if (temp) {
             arr->capacity = capacity / 2;
@@ -110,6 +110,72 @@ int deleteByKey(DynamicArray *arr, int key) {
     free(temp.obj);
     arr->size--;
     resize(arr);
+    return 0;
+}
+
+int deleteFromPosition(DynamicArray *arr, int position) {
+    if (position < 0 || position > arr->size - 1) {
+        printf("Invalid position.\n");
+        return 1;
+    }
+
+    DynamicArrayEntry temp = arr->entries[position];
+    for (int j = position; j < arr->size; ++j) {
+        arr->entries[j] = arr->entries[j + 1];
+    }
+    printf(
+        "Deleted { Key: %d, Obj->Value: %d } from position = %d.\n",
+        temp.key,
+        temp.obj->value,
+        position
+    );
+    free(temp.obj);
+    arr->size--;
+    resize(arr);
+    return 0;
+}
+
+int searchObj(DynamicArray *arr, Data obj) {
+    for (int i = 0; i < arr->size; ++i) {
+        if (arr->entries[i].obj->value == obj.value)
+            return i;
+    }
+    return -1;
+}
+
+int deleteByObj(DynamicArray *arr, Data obj) {
+    int index = searchObj(arr, obj);
+
+    if (index == -1) {
+        printf("Object not found.\n");
+        return 1;
+    }
+
+    DynamicArrayEntry temp = arr->entries[index];
+    for (int j = index; j < arr->size; ++j) {
+        arr->entries[j] = arr->entries[j + 1];
+    }
+    printf(
+        "Deleted { Key: %d, Obj->Value: %d } from position = %d.\n",
+        temp.key,
+        temp.obj->value,
+        index
+    );
+    free(temp.obj);
+    arr->size--;
+    resize(arr);
+    return 0;
+}
+
+int modify(DynamicArray *arr, int key, Data *newObj) {
+    int index = search(arr, key);
+
+    if (index == -1) {
+        printf("Object not found.\n");
+        return 1;
+    }
+
+    arr->entries[index].obj = newObj;
     return 0;
 }
 

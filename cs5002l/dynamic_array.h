@@ -23,9 +23,10 @@ int deleteAllByKey(DynamicArray *arr, int key);
 int deleteFromPosition(DynamicArray *arr, int position);
 int deleteByObj(DynamicArray *arr, Data obj);
 int deleteAllByObj(DynamicArray *arr, Data obj);
-int modify(DynamicArray *arr, int key, Data newObj);
-void sort(DynamicArray *arr);
+int modify(DynamicArray *arr, int key, Data *newObj);
+void sort(DynamicArray *arr, int start, int end);
 int search(DynamicArray *arr, int key);
+int searchObj(DynamicArray *arr, Data obj);
 void traverse(DynamicArray *arr);
 
 #endif
