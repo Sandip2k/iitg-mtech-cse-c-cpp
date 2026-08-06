@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "dynamic_array.h"
 
+// Assume distinct entries.
+
 DynamicArray *createNew() {
     DynamicArray *arr = (DynamicArray *) malloc(sizeof(DynamicArray));
     arr->capacity = 10;
@@ -192,6 +194,54 @@ void traverse(DynamicArray *arr) {
     }
 }
 
+void mergeTwoSortedArrays(DynamicArray *arr, int start, int mid, int end) {
+    int i = start, j = mid + 1, k = 0;
+    DynamicArrayEntry *tempEntries = (DynamicArrayEntry *) malloc((end - start + 1) * sizeof(DynamicArray));
+    while (i <= mid && j <= end) {
+        if (arr->entries[i].key <= arr->entries[j].key) {
+            tempEntries[k].key = arr->entries[i].key;
+            tempEntries[k].obj = arr->entries[i].obj;
+            k++; i++;
+        } else {
+            tempEntries[k].key = arr->entries[j].key;
+            tempEntries[k].obj = arr->entries[j].obj;
+            k++; j++;
+        }
+    }
+
+    while (i <= mid) {
+        tempEntries[k].key = arr->entries[i].key;
+        tempEntries[k].obj = arr->entries[i].obj;
+        k++; i++;
+    }
+
+    while (j <= end) {
+        tempEntries[k].key = arr->entries[j].key;
+        tempEntries[k].obj = arr->entries[j].obj;
+        k++; j++;
+    }
+
+    // copy back
+    for (int i = start; i <= end; ++i) {
+        arr->entries[i].key = tempEntries[i - start].key;
+        arr->entries[i].obj = tempEntries[i - start].obj;
+    }
+
+    // free the temporary memory
+    free(tempEntries);
+}
+
+void sort(DynamicArray *arr, int start, int end) {
+    if (start >= end) {
+        return;
+    }
+
+    int mid = start + (end - start) / 2;
+    sort(arr, start, mid);
+    sort(arr, mid + 1, end);
+    mergeTwoSortedArrays(arr, start, mid, end);
+}
+
 int main() {
     DynamicArray *arr = createNew();
     for (int i = 1; i <= 20; ++i) {
@@ -209,6 +259,8 @@ int main() {
     for (int i = 0; i < 18; ++i) {
         deleteByKey(arr, i);
     }
+    traverse(arr);
+    sort(arr, 0, arr->size - 1);
     traverse(arr);
     return 0;
 }
