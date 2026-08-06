@@ -1,28 +1,51 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include "dynamic_array.h"
 
-// Assume distinct entries.
+#define DEFAULT_CAPACITY 10
 
-// TODO: Null pointer handling.
+// Assume distinct entries.
+// If the satellite data is not present, INT_MIN is printed to indicate the same.
 
 DynamicArray *createNew() {
     DynamicArray *arr = (DynamicArray *) malloc(sizeof(DynamicArray));
-    arr->capacity = 10;
+    if (!arr) {
+        printf("Memory allocation failed.\n");
+        return NULL;
+    }
+    arr->capacity = DEFAULT_CAPACITY;
     arr->size = 0;
     arr->entries = (DynamicArrayEntry *) malloc(arr->capacity * sizeof(DynamicArrayEntry));
+    if (!arr->entries) {
+        printf("Memory allocation failed.\n");
+        free(arr);
+        return NULL;
+    }
     return arr;
 }
 
-int min(int a, int b) {
+int minimum(int a, int b) {
     return (a <= b) ? a : b;
 }
 
-int size(DynamicArray arr) { return arr.size; }
+int size(DynamicArray *arr) {
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return -1;
+    }
+    return arr->size;
+}
 
-int capacity(DynamicArray arr) { return arr.capacity; }
+int capacity(DynamicArray *arr) {
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return -1;
+    }
+    return arr->capacity;
+}
 
-void resize(DynamicArray *arr) {
+void _resize(DynamicArray *arr) {
     int size = arr->size;
     int capacity = arr->capacity;
 
@@ -48,19 +71,29 @@ void resize(DynamicArray *arr) {
 }
 
 int insertByKey(DynamicArray *arr, int key, Data *obj) {
-    resize(arr); // will resize if neccessary, else no operation is performed.
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return 1;
+    }
+
+    _resize(arr); // will resize if neccessary, else no operation is performed.
     arr->entries[arr->size].key = key;
     arr->entries[arr->size].obj = obj;
     arr->size++;
     printf(
             "Inserted { Key: %d, Obj->Value: %d } at the end.\n",
             arr->entries[arr->size - 1].key,
-            arr->entries[arr->size - 1].obj->value
+            arr->entries[arr->size - 1].obj ? 
+            arr->entries[arr->size - 1].obj->value : INT_MIN
         );
     return 0;
 }
 
 int insertByKeyAtPosition(DynamicArray *arr, int key, Data *obj, int position) {
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return 1;
+    }
     if (position < 0 || position > arr->size) {
         printf("Invalid position.\n");
         return 1;
@@ -69,7 +102,7 @@ int insertByKeyAtPosition(DynamicArray *arr, int key, Data *obj, int position) {
         // essentially, insert at the end.
         return insertByKey(arr, key, obj);
     } else {
-        resize(arr);
+        _resize(arr);
         // right-shift all the entries from (position + 1) to (size - 1) by 1.
         for (int i = arr->size - 1; i >= position; --i) {
             arr->entries[i + 1] = arr->entries[i];
@@ -80,7 +113,8 @@ int insertByKeyAtPosition(DynamicArray *arr, int key, Data *obj, int position) {
         printf(
             "Inserted { Key: %d, Obj->Value: %d } at position = %d.\n",
             arr->entries[position].key,
-            arr->entries[position].obj->value,
+            arr->entries[position].obj ?
+            arr->entries[position].obj->value : INT_MIN,
             position
         );
         return 0;
@@ -88,6 +122,10 @@ int insertByKeyAtPosition(DynamicArray *arr, int key, Data *obj, int position) {
 }
 
 int search(DynamicArray *arr, int key) {
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return -1;
+    }
     // return the index of the first occurrence of the key.
     // if the key is not found, then return -1.
     for (int i = 0; i < arr->size; ++i) {
@@ -98,6 +136,11 @@ int search(DynamicArray *arr, int key) {
 }
 
 int deleteByKey(DynamicArray *arr, int key) {
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return 1;
+    }
+
     int index = search(arr, key);
 
     if (index == -1) {
@@ -112,16 +155,21 @@ int deleteByKey(DynamicArray *arr, int key) {
     printf(
         "Deleted { Key: %d, Obj->Value: %d } from position = %d.\n",
         temp.key,
-        temp.obj->value,
+        temp.obj ? temp.obj->value : INT_MIN,
         index
     );
     free(temp.obj);
     arr->size--;
-    resize(arr);
+    _resize(arr);
     return 0;
 }
 
 int deleteFromPosition(DynamicArray *arr, int position) {
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return 1;
+    }
+
     if (position < 0 || position > arr->size - 1) {
         printf("Invalid position.\n");
         return 1;
@@ -134,24 +182,34 @@ int deleteFromPosition(DynamicArray *arr, int position) {
     printf(
         "Deleted { Key: %d, Obj->Value: %d } from position = %d.\n",
         temp.key,
-        temp.obj->value,
+        temp.obj ? temp.obj->value : INT_MIN,
         position
     );
     free(temp.obj);
     arr->size--;
-    resize(arr);
+    _resize(arr);
     return 0;
 }
 
 int searchObj(DynamicArray *arr, Data obj) {
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return -1;
+    }
+
     for (int i = 0; i < arr->size; ++i) {
-        if (arr->entries[i].obj->value == obj.value)
+        if (arr->entries[i].obj && arr->entries[i].obj->value == obj.value)
             return i;
     }
     return -1;
 }
 
 int deleteByObj(DynamicArray *arr, Data obj) {
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return 1;
+    }
+
     int index = searchObj(arr, obj);
 
     if (index == -1) {
@@ -166,16 +224,21 @@ int deleteByObj(DynamicArray *arr, Data obj) {
     printf(
         "Deleted { Key: %d, Obj->Value: %d } from position = %d.\n",
         temp.key,
-        temp.obj->value,
+        temp.obj ? temp.obj->value : INT_MIN,
         index
     );
     free(temp.obj);
     arr->size--;
-    resize(arr);
+    _resize(arr);
     return 0;
 }
 
 int modify(DynamicArray *arr, int key, Data *newObj) {
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return 1;
+    }
+
     int index = search(arr, key);
 
     if (index == -1) {
@@ -188,6 +251,11 @@ int modify(DynamicArray *arr, int key, Data *newObj) {
 }
 
 void traverse(DynamicArray *arr) {
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return;
+    }
+
     printf("Size = %d, Capacity = %d.\n", arr->size, arr->capacity);
     for (int i = 0; i < arr->size; ++i) {
         // there can be another way of processing the data, but for now we're just printing it.
@@ -195,14 +263,14 @@ void traverse(DynamicArray *arr) {
         printf(
             "{ Key: %d, Obj->Value: %d }\n",
             arr->entries[i].key,
-            arr->entries[i].obj->value
+            arr->entries[i].obj ? arr->entries[i].obj->value : INT_MIN
         );
     }
 }
 
 void mergeTwoSortedArrays(DynamicArray *arr, int start, int mid, int end) {
     int i = start, j = mid + 1, k = 0;
-    DynamicArrayEntry *tempEntries = (DynamicArrayEntry *) malloc((end - start + 1) * sizeof(DynamicArray));
+    DynamicArrayEntry *tempEntries = (DynamicArrayEntry *) malloc((end - start + 1) * sizeof(DynamicArrayEntry));
     while (i <= mid && j <= end) {
         if (arr->entries[i].key <= arr->entries[j].key) {
             tempEntries[k].key = arr->entries[i].key;
@@ -227,17 +295,22 @@ void mergeTwoSortedArrays(DynamicArray *arr, int start, int mid, int end) {
         k++; j++;
     }
 
-    // copy back
+    // copy back.
     for (int i = start; i <= end; ++i) {
         arr->entries[i].key = tempEntries[i - start].key;
         arr->entries[i].obj = tempEntries[i - start].obj;
     }
 
-    // free the temporary memory
+    // free the temporary memory.
     free(tempEntries);
 }
 
 void sort(DynamicArray *arr, int start, int end) {
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return;
+    }
+
     if (start >= end) {
         return;
     }
@@ -249,15 +322,35 @@ void sort(DynamicArray *arr, int start, int end) {
 }
 
 DynamicArray **split(DynamicArray *arr, int atPosition) {
+    if (!arr || !arr->entries) {
+        printf("Invalid array.\n");
+        return NULL;
+    }
+
     DynamicArray **result = (DynamicArray **) malloc(2 * sizeof(DynamicArray *));
+    if (!result) {
+        printf("Memory allocation failed.\n");
+        return NULL;
+    }
     if (atPosition < -1 || atPosition >= arr->size) {
         printf("Invalid position.\n");
         return NULL;
     }
 
     result[0] = (DynamicArray *) malloc(sizeof(DynamicArray));
-    result[0]->capacity = result[0]->size = min(atPosition + 1, arr->size);
+    if (!result[0]) {
+        printf("Memory allocation failed.\n");
+        free(result);
+        return NULL;
+    }
+    result[0]->capacity = result[0]->size = minimum(atPosition + 1, arr->size);
     result[0]->entries = (DynamicArrayEntry *) malloc(result[0]->size * sizeof(DynamicArrayEntry));
+    if (!result[0]->entries) {
+        printf("Memory allocation failed.\n");
+        free(result[0]);
+        free(result);
+        return NULL;
+    }
 
     for (int i = 0; i <= atPosition; ++i) {
         result[0]->entries[i].key = arr->entries[i].key;
@@ -265,8 +358,23 @@ DynamicArray **split(DynamicArray *arr, int atPosition) {
     }
 
     result[1] = (DynamicArray *) malloc(sizeof(DynamicArray));
-    result[1]->capacity = result[1]->size = min(arr->size - 1 - atPosition, arr->size);
+    if (result[1] == NULL) {
+        printf("Memory allocation failed.\n");
+        free(result[0]->entries);
+        free(result[0]);
+        free(result);
+        return NULL;
+    }
+    result[1]->capacity = result[1]->size = minimum(arr->size - 1 - atPosition, arr->size);
     result[1]->entries = (DynamicArrayEntry *) malloc(result[1]->size * sizeof(DynamicArrayEntry));
+    if (!result[1]->entries) {
+        printf("Memory allocation failed.\n");
+        free(result[1]);
+        free(result[0]->entries);
+        free(result[0]);
+        free(result);
+        return NULL;
+    }
 
     for (int i = atPosition + 1; i < arr->size; ++i) {
         result[1]->entries[i - (atPosition + 1)].key = arr->entries[i].key;
@@ -277,6 +385,11 @@ DynamicArray **split(DynamicArray *arr, int atPosition) {
 }
 
 DynamicArray *join(DynamicArray *arr1, DynamicArray *arr2) {
+    if (!arr1 || !arr1->entries || !arr2 || !arr2->entries) {
+        printf("Invalid array(s).\n");
+        return NULL;
+    }
+
     int size = 0;
     if (arr1) {
         size += arr1->size;
@@ -287,27 +400,31 @@ DynamicArray *join(DynamicArray *arr1, DynamicArray *arr2) {
     }
 
     DynamicArray *result = (DynamicArray *) malloc(sizeof(DynamicArray));
-    if (result) {
-        result->size = result->capacity = size;
-        result->entries = (DynamicArrayEntry *) malloc(size * sizeof(DynamicArrayEntry));
+    if (!result) {
+        printf("Memory allocation failed.\n");
+        return NULL;
+    }
+
+    result->size = result->capacity = size;
+    result->entries = (DynamicArrayEntry *) malloc(size * sizeof(DynamicArrayEntry));
+    if (!result->entries) {
+        printf("Memory allocation failed.\n");
+        free(result);
+        return NULL;
     }
 
     int i = 0, k = 0;
-    if (arr1 && arr1->entries) {
-        while (i < arr1->size) {
-            result->entries[k].key = arr1->entries[i].key;
-            result->entries[k].obj = arr1->entries[i].obj;
-            k++; i++;
-        }
+    while (i < arr1->size) {
+        result->entries[k].key = arr1->entries[i].key;
+        result->entries[k].obj = arr1->entries[i].obj;
+        k++; i++;
     }
 
     i = 0;
-    if (arr2 && arr2->entries) {
-        while (i < arr2->size) {
-            result->entries[k].key = arr2->entries[i].key;
-            result->entries[k].obj = arr2->entries[i].obj;
-            k++; i++;
-        }
+    while (i < arr2->size) {
+        result->entries[k].key = arr2->entries[i].key;
+        result->entries[k].obj = arr2->entries[i].obj;
+        k++; i++;
     }
 
     return result;
@@ -323,6 +440,8 @@ int main() {
     insertByKeyAtPosition(arr, 22, createNewData(22), 0);
     insertByKeyAtPosition(arr, 23, createNewData(23), arr->size);
     traverse(arr);
+    sort(arr, 0, arr->size - 1);
+    traverse(arr);
     deleteByKey(arr, 20);
     deleteByKey(arr, 22);
     deleteByKey(arr, 7);
@@ -331,9 +450,7 @@ int main() {
         deleteByKey(arr, i);
     }
     traverse(arr);
-    sort(arr, 0, arr->size - 1);
-    traverse(arr);
-    DynamicArray **splitResult = split(arr, 1);
+    DynamicArray **splitResult = split(arr, 3);
     if (splitResult) {
         traverse(splitResult[0]);
         traverse(splitResult[1]);

@@ -16,8 +16,8 @@ typedef struct DynamicArray {
 } DynamicArray;
 
 DynamicArray *createNew();
-int size(DynamicArray arr);
-int capacity(DynamicArray arr);
+int size(DynamicArray *arr);
+int capacity(DynamicArray *arr);
 int insertByKey(DynamicArray *arr, int key, Data *obj); // at the end
 int insertByKeyAtPosition(DynamicArray *arr, int key, Data *obj, int position); // at the given position
 int deleteByKey(DynamicArray *arr, int key);
