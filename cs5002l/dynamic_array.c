@@ -4,12 +4,18 @@
 
 // Assume distinct entries.
 
+// TODO: Null pointer handling.
+
 DynamicArray *createNew() {
     DynamicArray *arr = (DynamicArray *) malloc(sizeof(DynamicArray));
     arr->capacity = 10;
     arr->size = 0;
     arr->entries = (DynamicArrayEntry *) malloc(arr->capacity * sizeof(DynamicArrayEntry));
     return arr;
+}
+
+int min(int a, int b) {
+    return (a <= b) ? a : b;
 }
 
 int size(DynamicArray arr) { return arr.size; }
@@ -242,6 +248,71 @@ void sort(DynamicArray *arr, int start, int end) {
     mergeTwoSortedArrays(arr, start, mid, end);
 }
 
+DynamicArray **split(DynamicArray *arr, int atPosition) {
+    DynamicArray **result = (DynamicArray **) malloc(2 * sizeof(DynamicArray *));
+    if (atPosition < -1 || atPosition >= arr->size) {
+        printf("Invalid position.\n");
+        return NULL;
+    }
+
+    result[0] = (DynamicArray *) malloc(sizeof(DynamicArray));
+    result[0]->capacity = result[0]->size = min(atPosition + 1, arr->size);
+    result[0]->entries = (DynamicArrayEntry *) malloc(result[0]->size * sizeof(DynamicArrayEntry));
+
+    for (int i = 0; i <= atPosition; ++i) {
+        result[0]->entries[i].key = arr->entries[i].key;
+        result[0]->entries[i].obj = arr->entries[i].obj;
+    }
+
+    result[1] = (DynamicArray *) malloc(sizeof(DynamicArray));
+    result[1]->capacity = result[1]->size = min(arr->size - 1 - atPosition, arr->size);
+    result[1]->entries = (DynamicArrayEntry *) malloc(result[1]->size * sizeof(DynamicArrayEntry));
+
+    for (int i = atPosition + 1; i < arr->size; ++i) {
+        result[1]->entries[i - (atPosition + 1)].key = arr->entries[i].key;
+        result[1]->entries[i - (atPosition + 1)].obj = arr->entries[i].obj;
+    }
+
+    return result;
+}
+
+DynamicArray *join(DynamicArray *arr1, DynamicArray *arr2) {
+    int size = 0;
+    if (arr1) {
+        size += arr1->size;
+    }
+
+    if (arr2) {
+        size += arr2->size;
+    }
+
+    DynamicArray *result = (DynamicArray *) malloc(sizeof(DynamicArray));
+    if (result) {
+        result->size = result->capacity = size;
+        result->entries = (DynamicArrayEntry *) malloc(size * sizeof(DynamicArrayEntry));
+    }
+
+    int i = 0, k = 0;
+    if (arr1 && arr1->entries) {
+        while (i < arr1->size) {
+            result->entries[k].key = arr1->entries[i].key;
+            result->entries[k].obj = arr1->entries[i].obj;
+            k++; i++;
+        }
+    }
+
+    i = 0;
+    if (arr2 && arr2->entries) {
+        while (i < arr2->size) {
+            result->entries[k].key = arr2->entries[i].key;
+            result->entries[k].obj = arr2->entries[i].obj;
+            k++; i++;
+        }
+    }
+
+    return result;
+}
+
 int main() {
     DynamicArray *arr = createNew();
     for (int i = 1; i <= 20; ++i) {
@@ -262,5 +333,12 @@ int main() {
     traverse(arr);
     sort(arr, 0, arr->size - 1);
     traverse(arr);
+    DynamicArray **splitResult = split(arr, 1);
+    if (splitResult) {
+        traverse(splitResult[0]);
+        traverse(splitResult[1]);
+        DynamicArray *joinResult = join(splitResult[0], splitResult[1]);
+        traverse(joinResult);
+    }
     return 0;
 }

@@ -30,5 +30,7 @@ void sort(DynamicArray *arr, int start, int end);
 int search(DynamicArray *arr, int key);
 int searchObj(DynamicArray *arr, Data obj);
 void traverse(DynamicArray *arr);
+DynamicArray **split(DynamicArray *arr, int atPosition);
+DynamicArray *join(DynamicArray *arr1, DynamicArray *arr2);
 
 #endif
