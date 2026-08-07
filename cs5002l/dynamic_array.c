@@ -3,10 +3,12 @@
 #include <limits.h>
 #include "dynamic_array.h"
 
-#define DEFAULT_CAPACITY 10
+#define DEFAULT_MIN_CAPACITY 10
+#define DEFAULT_MAX_CAPACITY 1000
 
 // Assume distinct entries.
 // If the satellite data is not present, INT_MIN is printed to indicate the same.
+// Resizing only takes place if the capacity is between the default minimum and maximum capacity, inclusive.
 
 DynamicArray *createNew() {
     DynamicArray *arr = (DynamicArray *) malloc(sizeof(DynamicArray));
@@ -14,7 +16,7 @@ DynamicArray *createNew() {
         printf("Memory allocation failed.\n");
         return NULL;
     }
-    arr->capacity = DEFAULT_CAPACITY;
+    arr->capacity = DEFAULT_MIN_CAPACITY;
     arr->size = 0;
     arr->entries = (DynamicArrayEntry *) malloc(arr->capacity * sizeof(DynamicArrayEntry));
     if (!arr->entries) {
@@ -27,6 +29,10 @@ DynamicArray *createNew() {
 
 int minimum(int a, int b) {
     return (a <= b) ? a : b;
+}
+
+int maximum(int a, int b) {
+    return (a >= b) ? a : b;
 }
 
 int size(DynamicArray *arr) {
@@ -45,28 +51,46 @@ int capacity(DynamicArray *arr) {
     return arr->capacity;
 }
 
-void _resize(DynamicArray *arr) {
+int resize(DynamicArray *arr) {
     int size = arr->size;
     int capacity = arr->capacity;
 
     if (size == capacity) { // increase the size
-        DynamicArrayEntry *temp = (DynamicArrayEntry *) realloc(arr->entries, capacity * 2 * sizeof(DynamicArrayEntry));
+        if (capacity == DEFAULT_MAX_CAPACITY) {
+            printf("Reached maximum capacity.\n");
+            return 1; // can't expand further, an error scenario.
+        }
+        DynamicArrayEntry *temp = (DynamicArrayEntry *) realloc(
+            arr->entries, minimum(capacity * 2, DEFAULT_MAX_CAPACITY) * sizeof(DynamicArrayEntry)
+        );
         if (temp) {
-            arr->capacity = capacity * 2;
+            arr->capacity = minimum(capacity * 2, DEFAULT_MAX_CAPACITY);
             arr->entries = temp;
             printf("Resized from capacity = %d to capacity = %d.\n", capacity, arr->capacity);
+            return 0;
         } else {
             printf("Failed to resize.\n");
+            return 1;
         }
     } else if (size <= (capacity / 4)) { // decrease the size
-        DynamicArrayEntry *temp = (DynamicArrayEntry *) realloc(arr->entries, (capacity / 2) * sizeof(DynamicArrayEntry));
+        if (capacity == DEFAULT_MIN_CAPACITY) {
+            printf("Already at minimum default capacity.\n");
+            return 0; // can't contract further, but not an error scenario.
+        }
+        DynamicArrayEntry *temp = (DynamicArrayEntry *) realloc(
+            arr->entries, maximum(capacity / 2, DEFAULT_MIN_CAPACITY) * sizeof(DynamicArrayEntry)
+        );
         if (temp) {
-            arr->capacity = capacity / 2;
+            arr->capacity = maximum(capacity / 2, DEFAULT_MIN_CAPACITY);
             arr->entries = temp;
             printf("Resized from capacity = %d to capacity = %d.\n", capacity, arr->capacity);
+            return 0;
         } else {
             printf("Failed to resize.\n");
+            return 1;
         }
+    } else {
+        return 0; // no resizing needed
     }
 }
 
@@ -76,7 +100,11 @@ int insertByKey(DynamicArray *arr, int key, Data *obj) {
         return 1;
     }
 
-    _resize(arr); // will resize if neccessary, else no operation is performed.
+    if (resize(arr)) {
+        printf("Failed to resize array.\n");
+        return 1;
+    }
+
     arr->entries[arr->size].key = key;
     arr->entries[arr->size].obj = obj;
     arr->size++;
@@ -102,7 +130,10 @@ int insertByKeyAtPosition(DynamicArray *arr, int key, Data *obj, int position) {
         // essentially, insert at the end.
         return insertByKey(arr, key, obj);
     } else {
-        _resize(arr);
+        if (resize(arr)) {
+            printf("Failed to resize array.\n");
+            return 1;
+        }
         // right-shift all the entries from (position + 1) to (size - 1) by 1.
         for (int i = arr->size - 1; i >= position; --i) {
             arr->entries[i + 1] = arr->entries[i];
@@ -160,7 +191,10 @@ int deleteByKey(DynamicArray *arr, int key) {
     );
     free(temp.obj);
     arr->size--;
-    _resize(arr);
+    if (resize(arr)) {
+        printf("Failed to resize array.\n");
+        return 1;
+    }
     return 0;
 }
 
@@ -187,7 +221,10 @@ int deleteFromPosition(DynamicArray *arr, int position) {
     );
     free(temp.obj);
     arr->size--;
-    _resize(arr);
+    if (resize(arr)) {
+        printf("Failed to resize array.\n");
+        return 1;
+    }
     return 0;
 }
 
@@ -229,7 +266,10 @@ int deleteByObj(DynamicArray *arr, Data obj) {
     );
     free(temp.obj);
     arr->size--;
-    _resize(arr);
+    if (resize(arr)) {
+        printf("Failed to resize array.\n");
+        return 1;
+    }
     return 0;
 }
 
@@ -450,7 +490,7 @@ int main() {
         deleteByKey(arr, i);
     }
     traverse(arr);
-    DynamicArray **splitResult = split(arr, 3);
+    DynamicArray **splitResult = split(arr, 2);
     if (splitResult) {
         traverse(splitResult[0]);
         traverse(splitResult[1]);
