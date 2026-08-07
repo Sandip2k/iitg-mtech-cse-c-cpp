@@ -6,7 +6,8 @@ typedef struct Poly {
     int capacity;
 } Polynomial;
 
-Polynomial *initPolynomial(int degree);
+Polynomial *initPolynomial();
+void deletePolynomial(Polynomial *p);
 Polynomial *addPolynomials(Polynomial *p1, Polynomial *p2);
 Polynomial *subtractPolynomials(Polynomial *p1, Polynomial *p2);
 Polynomial *multiplyPolynomials(Polynomial *p1, Polynomial *p2);
