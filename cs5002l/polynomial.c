@@ -4,21 +4,33 @@
 #include <string.h>
 #include "polynomial.h"
 
-#define MAX_INITIAL_CAPACITY 5
+#define DEFAULT_MIN_CAPACITY 10
+#define DEFAULT_MAX_CAPACITY 1000
 
 // Assume only positive, real exponents.
-
-// TODO: Null pointer handling for all functions.
 
 int maximum(int a, int b) {
     return (a >= b) ? a : b;
 }
 
+int minimum(int a, int b) {
+    return (a <= b) ? a : b;
+}
+
 Polynomial *initPolynomial() {
     Polynomial *polynomial = (Polynomial *) malloc(sizeof(Polynomial));
+    if (!polynomial) {
+        printf("Memory allocation failed.\n");
+        return NULL;
+    }
     polynomial->degree = -1;
-    polynomial->capacity = MAX_INITIAL_CAPACITY;
+    polynomial->capacity = DEFAULT_MIN_CAPACITY;
     polynomial->coefficients = (double *) malloc(polynomial->capacity * sizeof(double));
+    if (!polynomial->coefficients) {
+        printf("Memory allocation failed.\n");
+        free(polynomial);
+        return NULL;
+    }
     memset(polynomial->coefficients, 0, polynomial->capacity * sizeof(double));
     return polynomial;
 }
@@ -30,53 +42,91 @@ void deletePolynomial(Polynomial *polynomial) {
     }
 }
 
-void resize(Polynomial *polynomial) {
+int resize(Polynomial *polynomial) {
+    if (!polynomial) return 1;
     if (polynomial->degree == polynomial->capacity) {
-        double *temp = (double *) realloc(polynomial->coefficients, polynomial->capacity * 2 * sizeof(double));
+        if (polynomial->capacity == DEFAULT_MAX_CAPACITY) {
+            printf("Reached the maximum capacity.\n");
+            return 1;
+        }
+        double *temp = (double *) realloc(
+            polynomial->coefficients, minimum(polynomial->capacity * 2, DEFAULT_MAX_CAPACITY) * sizeof(double)
+        );
         if (temp) {
             memset(temp + polynomial->capacity, 0, polynomial->capacity * sizeof(double));
             // printf("Resized from %d to %d.\n", p->capacity, p->capacity * 2);
-            polynomial->capacity *= 2;
+            polynomial->capacity = minimum(polynomial->capacity * 2, DEFAULT_MAX_CAPACITY);
             polynomial->coefficients = temp;
-            
-            
+            return 0;
+        } else {
+            printf("Failed to resize.\n");
+            return 1;
         }
     } else if (polynomial->degree <= (polynomial->capacity / 4)) {
-        double *temp = (double *) realloc(polynomial->coefficients, (polynomial->capacity / 2) * sizeof(double));
+        if (polynomial->capacity == DEFAULT_MIN_CAPACITY) {
+            printf("Already at the minimum capacity.\n");
+            return 0;
+        }
+        double *temp = (double *) realloc(
+            polynomial->coefficients, maximum(polynomial->capacity / 2, DEFAULT_MIN_CAPACITY) * sizeof(double)
+        );
         if (temp) {
             // printf("Resized from %d to %d.\n", p->capacity, p->capacity / 2);
-            polynomial->capacity /= 2;
+            polynomial->capacity = maximum(polynomial->capacity / 2, DEFAULT_MIN_CAPACITY);
             polynomial->coefficients = temp;
+            return 0;
+        } else {
+            printf("Failed to resize.\n");
+            return 1;
         }
     }
 }
 
 void addTerm(Polynomial *polynomial, double coefficient, int exponent) {
+    if (!polynomial || !polynomial->coefficients) {
+        printf("Invalid polynomial.\n");
+        return;
+    }
+
     if (exponent < 0) {
         printf("Negative exponents aren't allowed.\n");
         return;
     }
 
-    if (exponent > polynomial->degree) {
-        polynomial->degree = exponent;
-        printf("Highest degree now: %d.\n", polynomial->degree);
-    }
-
-    while (polynomial->capacity <= polynomial->degree) {
-        double *temp = (double *) realloc(polynomial->coefficients, (polynomial->capacity * 2) * sizeof(double));
+    while (polynomial->capacity <= exponent) {
+        if (polynomial->capacity == DEFAULT_MAX_CAPACITY) {
+            printf("Reached the maximum capacity.\n");
+            return;
+        }
+        double *temp = (double *) realloc(
+            polynomial->coefficients, minimum(polynomial->capacity * 2, DEFAULT_MAX_CAPACITY) * sizeof(double)
+        );
         if (temp) {
             memset(temp + polynomial->capacity, 0, polynomial->capacity * sizeof(double));
             // printf("Resized from %d to %d.\n", p->capacity, p->capacity * 2);
-            polynomial->capacity *= 2;
+            polynomial->capacity = minimum(polynomial->capacity * 2, DEFAULT_MAX_CAPACITY);
             polynomial->coefficients = temp;
+        } else {
+            printf("Failed to resize.\n");
+            return;
         }
     }
+
+        if (exponent > polynomial->degree) {
+            polynomial->degree = exponent;
+            printf("Highest degree now: %d.\n", polynomial->degree);
+        }
 
     polynomial->coefficients[exponent] += coefficient;
     resize(polynomial);
 }
 
 void removeTerm(Polynomial *polynomial, int exponent) {
+    if (!polynomial || !polynomial->coefficients) {
+        printf("Invalid polynomial.\n");
+        return;
+    }
+
     if (exponent < 0 || exponent > polynomial->degree || !polynomial->coefficients[exponent]) {
         printf("Invalid exponent value: %d.\n", exponent);
         return;
@@ -98,10 +148,26 @@ void removeTerm(Polynomial *polynomial, int exponent) {
 }
 
 Polynomial *addPolynomials(Polynomial *p1, Polynomial *p2) {
+    if (!p1 || !p2 || !p1->coefficients || !p2->coefficients) {
+        printf("Invalid polynomial(s).\n");
+        return NULL;
+    }
+
     Polynomial *result = (Polynomial *) malloc(sizeof(Polynomial));
+    if (!result) {
+        printf("Memory allocation failed.\n");
+        return NULL;
+    }
+
     result->degree = (int) maximum(p1->degree, p2->degree);
     result->capacity = result->degree + 1;
     result->coefficients = (double *) malloc(result->capacity * sizeof(double));
+    if (!result->coefficients) {
+        printf("Memory allocation failed.\n");
+        free(result);
+        return NULL;
+    }
+
     memset(result->coefficients, 0, result->capacity * sizeof(double));
 
     for (int i = 0; i <= result->degree; ++i) {
@@ -112,10 +178,26 @@ Polynomial *addPolynomials(Polynomial *p1, Polynomial *p2) {
 }
 
 Polynomial *subtractPolynomials(Polynomial *p1, Polynomial *p2) {
+    if (!p1 || !p2 || !p1->coefficients || !p2->coefficients) {
+        printf("Invalid polynomial(s).\n");
+        return NULL;
+    }
+
     Polynomial *result = (Polynomial *) malloc(sizeof(Polynomial));
+    if (!result) {
+        printf("Memory allocation failed.\n");
+        return NULL;
+    }
+
     result->degree = (int) maximum(p1->degree, p2->degree);
     result->capacity = result->degree + 1;
     result->coefficients = (double *) malloc(result->capacity * sizeof(double));
+    if (!result->coefficients) {
+        printf("Memory allocation failed.\n");
+        free(result);
+        return NULL;
+    }
+
     memset(result->coefficients, 0, result->capacity * sizeof(double));
 
     for (int i = 0; i <= result->degree; ++i) {
@@ -126,16 +208,27 @@ Polynomial *subtractPolynomials(Polynomial *p1, Polynomial *p2) {
 }
 
 Polynomial *multiplyPolynomials(Polynomial *p1, Polynomial *p2) {
+    if (!p1 || !p2 || !p1->coefficients || !p2->coefficients) {
+        printf("Invalid polynomial(s).\n");
+        return NULL;
+    }
+
     Polynomial *result = (Polynomial *) malloc(sizeof(Polynomial));
+    if (!result) {
+        printf("Memory allocation failed.\n");
+        return NULL;
+    }
+
     result->degree = maximum((p1->degree + p2->degree), -1);
     result->capacity = result->degree + 1;
     result->coefficients = (double *) malloc(result->capacity * sizeof(double));
-    memset(result->coefficients, 0, result->capacity * sizeof(double));
-
     if (!result->coefficients) {
+        printf("Memory allocation failed.\n");
         free(result);
         return NULL;
     }
+
+    memset(result->coefficients, 0, result->capacity * sizeof(double));
 
     for (int i = 0; i <= p1->degree; ++i) {
         for (int j = 0; j <= p2->degree; ++j) {
@@ -152,6 +245,10 @@ Polynomial *multiplyPolynomials(Polynomial *p1, Polynomial *p2) {
 }
 
 void printPolynomial(Polynomial *p) {
+    if (!p|| !p->coefficients) {
+        return;
+    }
+
     for (int i = 0; i <= p->degree; ++i) {
         if (fabs(p->coefficients[i] - 0) <= pow(10, -6)) continue;
 
