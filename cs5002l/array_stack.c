@@ -6,8 +6,19 @@
 
 Stack *init() {
     Stack *stack = (Stack *) malloc(sizeof(Stack));
+    if (!stack) {
+        printf("Stack initialization failed.\n");
+        return NULL;
+    }
+
     stack->top = -1;
-    stack->stack = createNew();
+    DynamicArray *arr = createNew();
+    if (!arr) {
+        printf("Stack initialization failed.\n");
+        free(stack);
+        return NULL;
+    }
+
     return stack;
 }
 

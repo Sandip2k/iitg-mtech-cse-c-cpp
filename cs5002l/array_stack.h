@@ -10,9 +10,9 @@ typedef struct Stack {
 
 Stack *init();
 int push(Stack *s, Data *data);
-int isEmpty(Stack *s);
-int isFull(Stack *s);
 Data *pop(Stack *s);
 Data *peek(Stack *s);
+int isEmpty(Stack *s);
+int isFull(Stack *s);
 
 #endif
