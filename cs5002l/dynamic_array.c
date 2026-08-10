@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include "dynamic_array.h"
-
-#define DEFAULT_MIN_CAPACITY 10
-#define DEFAULT_MAX_CAPACITY 1000
+#include "constants.h"
 
 // Assume distinct entries.
 // If the satellite data is not present, INT_MIN is printed to indicate the same.
@@ -470,6 +468,7 @@ DynamicArray *join(DynamicArray *arr1, DynamicArray *arr2) {
     return result;
 }
 
+/*
 int main() {
     DynamicArray *arr = createNew();
     for (int i = 1; i <= 20; ++i) {
@@ -499,3 +498,4 @@ int main() {
     }
     return 0;
 }
+*/

@@ -1,0 +1,6 @@
+#ifndef CONSTANTS_H
+
+#define DEFAULT_MIN_CAPACITY 10
+#define DEFAULT_MAX_CAPACITY 1000
+
+#endif

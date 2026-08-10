@@ -3,9 +3,7 @@
 #include <math.h>
 #include <string.h>
 #include "polynomial.h"
-
-#define DEFAULT_MIN_CAPACITY 10
-#define DEFAULT_MAX_CAPACITY 1000
+#include "constants.h"
 
 // Assume only positive, real exponents.
 
