@@ -1,4 +1,5 @@
 #ifndef DATA_H
+#define DATA_H
 
 // Simple struct Data for Satellite Data Demonstration
 typedef struct Data {
