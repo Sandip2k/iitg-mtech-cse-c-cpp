@@ -19,6 +19,7 @@ Stack *init() {
         return NULL;
     }
 
+    stack->stack = arr;
     return stack;
 }
 
