@@ -1,16 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
-#include "singly_linked_list.h"
+#include "doubly_linked_list.h"
 
-// Assume distinct entries.
-
-int isEmpty(SLL *list) {
+int isEmpty(DLL *list) {
     return (list->size == 0);
 }
 
-SLL *createNewList() {
-    SLL *list = (SLL *) malloc(sizeof(SLL));
+DLL *createNewList() {
+    DLL *list = (DLL *) malloc(sizeof(DLL));
     if (!list) {
         printf("Memory allocation failed.\n");
         return NULL;
@@ -21,7 +18,7 @@ SLL *createNewList() {
     return list;
 }
 
-int insertAtHead(SLL *list, int value) {
+int insertAtHead(DLL *list, int value) {
     if (!list) {
         printf("List not initialized.\n");
         return 0;
@@ -33,7 +30,7 @@ int insertAtHead(SLL *list, int value) {
         return 0;
     }
 
-    SLLNode *newNode = createNewNode(data);
+    DLLNode *newNode = createNewNode(data);
 
     if (!newNode) {
         printf("Failed to allocate memory.\n");
@@ -44,6 +41,7 @@ int insertAtHead(SLL *list, int value) {
     if (!list->head) { // First node being inserted.
         list->head = list->tail = newNode;
     } else {
+        list->head->prev = newNode;
         newNode->next = list->head;
         list->head = newNode;
     }
@@ -52,7 +50,7 @@ int insertAtHead(SLL *list, int value) {
     return 1;
 }
 
-int insertAtTail(SLL *list, int value) {
+int insertAtTail(DLL *list, int value) {
     if (!list) {
         printf("List not initialized.\n");
         return 0;
@@ -64,7 +62,7 @@ int insertAtTail(SLL *list, int value) {
         return 0;
     }
 
-    SLLNode *newNode = createNewNode(data);
+    DLLNode *newNode = createNewNode(data);
 
     if (!newNode) {
         printf("Failed to allocate memory.\n");
@@ -75,6 +73,7 @@ int insertAtTail(SLL *list, int value) {
     if (!list->head) { // First node being inserted.
         list->head = list->tail = newNode;
     } else {
+        newNode->prev = list->tail;
         list->tail->next = newNode;
         list->tail = newNode;
     }
@@ -83,7 +82,7 @@ int insertAtTail(SLL *list, int value) {
     return 1;
 }
 
-int insertAtPosition(SLL *list, int value, int position) {
+int insertAtPosition(DLL *list, int value, int position) {
     if (!list) {
         printf("List not initialized.\n");
         return 0;
@@ -95,7 +94,7 @@ int insertAtPosition(SLL *list, int value, int position) {
         return 0;
     }
 
-    SLLNode *newNode = createNewNode(data);
+    DLLNode *newNode = createNewNode(data);
 
     if (!newNode) {
         printf("Failed to allocate memory.\n");
@@ -111,19 +110,23 @@ int insertAtPosition(SLL *list, int value, int position) {
     }
 
     if (position == 0) {
+        list->head->prev = newNode;
         newNode->next = list->head;
         list->head = newNode;
         if (isEmpty(list)) {
             list->tail = newNode;
         }
     } else if (position == list->size) {
+        newNode->prev = list->tail;
         list->tail->next = newNode;
         list->tail = newNode;
     } else {
-        SLLNode *current = list->head;
+        DLLNode *current = list->head;
         for (int i = 0; i < position - 1; i++) { // Find the node just before the desired position.
             current = current->next;
         }
+        newNode->prev = current;
+        current->next->prev = newNode;
         newNode->next = current->next;
         current->next = newNode;
     }
@@ -131,8 +134,7 @@ int insertAtPosition(SLL *list, int value, int position) {
     list->size++;
     return 1;
 }
-
-Data *deleteFromHead(SLL *list) {
+Data *deleteFromHead(DLL *list) {
     if (!list) {
         printf("List not initialized.\n");
         return NULL;
@@ -143,19 +145,20 @@ Data *deleteFromHead(SLL *list) {
         return NULL;
     }
 
-    SLLNode *temp = list->head;
+    DLLNode *temp = list->head;
     Data *data = temp->data;
     if (list->head == list->tail) {
         list->head = list->tail = NULL;
     } else {
         list->head = list->head->next;
+        list->head->prev = NULL;
     }
     free(temp);
     list->size--;
     return data;
 }
 
-Data *deleteFromTail(SLL *list) {
+Data *deleteFromTail(DLL *list) {
     if (!list) {
         printf("List not initialized.\n");
         return NULL;
@@ -166,16 +169,12 @@ Data *deleteFromTail(SLL *list) {
         return NULL;
     }
 
-    SLLNode *temp = list->tail;
+    DLLNode *temp = list->tail;
     Data *data = temp->data;
     if (list->head == list->tail) {
         list->head = list->tail = NULL;
     } else {
-        SLLNode *current = list->head;
-        while (current->next != list->tail) {
-            current = current->next;
-        }
-        list->tail = current;
+        list->tail = list->tail->prev;
         list->tail->next = NULL;
     }
     free(temp);
@@ -183,7 +182,7 @@ Data *deleteFromTail(SLL *list) {
     return data;
 }
 
-Data *deleteByValue(SLL *list, int value) {
+Data *deleteByValue(DLL *list, int value) {
     if (!list) {
         printf("List not initialized.\n");
         return NULL;
@@ -194,17 +193,26 @@ Data *deleteByValue(SLL *list, int value) {
         return NULL;
     }
 
-    SLLNode *current = list->head;
-    SLLNode *previous = NULL;
+    DLLNode *current = list->head;
+    DLLNode *previous = NULL;
     while (current) {
         if (current->data && current->data->value == value) {
             if (previous) {
+                if (current->next) {
+                    current->next->prev = previous;
+                }
                 previous->next = current->next;
             } else {
                 list->head = current->next;
+                if (list->head) {
+                    list->head->prev = NULL;
+                }
             }
             if (current == list->tail) {
                 list->tail = previous;
+                if (list->tail) {
+                    list->tail->next = NULL;
+                }
             }
             Data *data = current->data;
             free(current);
@@ -217,8 +225,7 @@ Data *deleteByValue(SLL *list, int value) {
     printf("Value not found.\n");
     return NULL;
 }
-
-Data *deleteFromPosition(SLL *list, int position) {
+Data *deleteFromPosition(DLL *list, int position) {
     if (!list) {
         printf("List not initialized.\n");
         return NULL;
@@ -231,21 +238,26 @@ Data *deleteFromPosition(SLL *list, int position) {
 
     if (position == 0) {
         return deleteFromHead(list);
+    } else if (position == list->size - 1) {
+        return deleteFromTail(list);
     }
 
-    SLLNode *current = list->head;
+    DLLNode *current = list->head;
     for (int i = 0; i < position - 1; i++) { // Find the node just before the desired position.
         current = current->next;
     }
-    SLLNode *temp = current->next;
+    DLLNode *temp = current->next;
     Data *data = temp->data;
     current->next = current->next->next;
+    if (current->next) {
+        current->next->prev = current;
+    }
     free(temp);
     list->size--;
     return data;
 }
 
-SLLNode *search(SLL *list, int value) {
+DLLNode *search(DLL *list, int value) {
     if (!list) {
         printf("List not initialized.\n");
         return NULL;
@@ -256,7 +268,7 @@ SLLNode *search(SLL *list, int value) {
         return NULL;
     }
 
-    SLLNode *current = list->head;
+    DLLNode *current = list->head;
     while (current) {
         if (current->data && current->data->value == value) {
             return current;
@@ -267,8 +279,8 @@ SLLNode *search(SLL *list, int value) {
     return NULL;
 }
 
-void traverse(SLL *list) {
-    SLLNode *curr = list->head;
+void traverse(DLL *list) {
+    DLLNode *curr = list->head;
     while (curr) {
         printf("%d ", (curr->data ? curr->data->value : INT_MIN));
 
@@ -280,12 +292,25 @@ void traverse(SLL *list) {
     printf("\n");
 }
 
-void reverse(SLL *list) {
+void traverseInReverse(DLL *list) {
+    DLLNode *curr = list->tail;
+    while (curr) {
+        printf("%d ", (curr->data ? curr->data->value : INT_MIN));
+
+        if (curr == list->head)
+            break;
+
+        curr = curr->prev;
+    }
+    printf("\n");
+}
+
+void reverse(DLL *list) {
 
 }
 
 int main() {
-    SLL *list = createNewList();
+    DLL *list = createNewList();
     insertAtHead(list, 1);
     insertAtHead(list, 2);
     insertAtHead(list, 3);
@@ -298,16 +323,18 @@ int main() {
     insertAtHead(list, 10);
     insertAtPosition(list, 11, list->size);
     traverse(list);
+    traverseInReverse(list);
 
-    deleteFromHead(list);
-    deleteFromTail(list);
+    deleteFromHead(list); // 10
+    deleteFromTail(list); // 11
     deleteByValue(list, 7);
-    deleteFromPosition(list, 2);
-    deleteFromPosition(list, list->size - 1);
+    deleteFromPosition(list, 2); // 2
+    deleteFromPosition(list, list->size - 1); // 9 <- check this.
     traverse(list);
+    traverseInReverse(list);
 
-    SLLNode *searchResult1 = search(list, 5);
-    SLLNode *searchResult2 = search(list, 12);
+    DLLNode *searchResult1 = search(list, 5);
+    DLLNode *searchResult2 = search(list, 12);
 
     printf(
         "Found: %d\n",

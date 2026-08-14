@@ -1,4 +1,5 @@
 #ifndef ARRAY_STACK_H
+#define ARRAY_STACK_H
 
 #include "dynamic_array.h"
 #include "constants.h"

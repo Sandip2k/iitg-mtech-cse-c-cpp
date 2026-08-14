@@ -1,4 +1,5 @@
 #ifndef ARRAY_QUEUE_H
+#define ARRAY_QUEUE_H
 
 #include "dynamic_array.h"
 #include "constants.h"

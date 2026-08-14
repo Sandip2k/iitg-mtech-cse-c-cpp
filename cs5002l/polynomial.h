@@ -1,4 +1,5 @@
 #ifndef POLYNOMIAL_H
+#define POLYNOMIAL_H
 
 typedef struct Poly {
     double *coefficients;
