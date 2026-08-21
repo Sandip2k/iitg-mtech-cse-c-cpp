@@ -4,16 +4,9 @@
 #include <string.h>
 #include "polynomial.h"
 #include "constants.h"
+#include "operations.h"
 
 // Assume only positive, real exponents.
-
-int maximum(int a, int b) {
-    return (a >= b) ? a : b;
-}
-
-int minimum(int a, int b) {
-    return (a <= b) ? a : b;
-}
 
 Polynomial *initPolynomial() {
     Polynomial *polynomial = (Polynomial *) malloc(sizeof(Polynomial));

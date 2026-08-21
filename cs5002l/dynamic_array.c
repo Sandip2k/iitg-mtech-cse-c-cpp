@@ -3,6 +3,7 @@
 #include <limits.h>
 #include "dynamic_array.h"
 #include "constants.h"
+#include "operations.h"
 
 // Assume distinct entries.
 // If the satellite data is not present, INT_MIN is printed to indicate the same.
@@ -23,14 +24,6 @@ DynamicArray *createNew() {
         return NULL;
     }
     return arr;
-}
-
-int minimum(int a, int b) {
-    return (a <= b) ? a : b;
-}
-
-int maximum(int a, int b) {
-    return (a >= b) ? a : b;
 }
 
 int size(DynamicArray *arr) {
