@@ -101,10 +101,9 @@ Data *extractMax(MaxHeap *heap) {
     heap->heap->entries[heap->heap->size - 1].obj = tempObj;
 
     Data *max = heap->heap->entries[heap->heap->size - 1].obj;
-    
-    if (!heapify(heap, 1)) {
-        deleteFromPosition(heap->heap, heap->heap->size - 1);
-    }
+    deleteFromPosition(heap->heap, heap->heap->size - 1);
+    printf("Heap size: %d\n.", heap->heap->size);
+    heapify(heap, 1);
 
     return max;
 }

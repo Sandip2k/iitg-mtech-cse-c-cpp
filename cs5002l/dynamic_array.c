@@ -180,7 +180,6 @@ int deleteByKey(DynamicArray *arr, int key) {
         temp.obj ? temp.obj->value : INT_MIN,
         index
     );
-    free(temp.obj);
     arr->size--;
     if (resize(arr)) {
         printf("Failed to resize array.\n");
@@ -210,7 +209,6 @@ int deleteFromPosition(DynamicArray *arr, int position) {
         temp.obj ? temp.obj->value : INT_MIN,
         position
     );
-    free(temp.obj);
     arr->size--;
     if (resize(arr)) {
         printf("Failed to resize array.\n");
@@ -255,7 +253,6 @@ int deleteByObj(DynamicArray *arr, Data obj) {
         temp.obj ? temp.obj->value : INT_MIN,
         index
     );
-    free(temp.obj);
     arr->size--;
     if (resize(arr)) {
         printf("Failed to resize array.\n");
