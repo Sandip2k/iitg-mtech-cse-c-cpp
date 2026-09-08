@@ -1,15 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include "max_heap.h"
 #include "operations.h"
 
-int heapify(MaxHeap *heap, int idx) {
+int siftDown(MaxHeap *heap, int idx) {
     if (!heap || !heap->heap) {
         printf("Invalid heap configuration.\n");
         return 1;
     }
 
-    if (!heap->heap->size) {
+    if (heap->heap->size <= 1) {
         printf("Heap is empty.\n");
         return 1;
     }
@@ -43,10 +44,57 @@ int heapify(MaxHeap *heap, int idx) {
         return 0;
     }
 
-    return heapify(heap, argMax);
+    return siftDown(heap, argMax);
 }
 
-MaxHeap *init(DynamicArray *arr) {
+int siftUp(MaxHeap *heap, int idx) {
+    if (!heap || !heap->heap) {
+        printf("Invalid heap configuration.\n");
+        return 1;
+    }
+
+    if (heap->heap->size <= 1) {
+        printf("Heap is empty.\n");
+        return 1;
+    }
+
+    if (idx == 1) {
+        return 0;
+    }
+
+    int parentIdx = idx / 2;
+    int siblingIdx = (idx == 2 * parentIdx) ? (2 * parentIdx + 1) : (2 * parentIdx);
+
+    int max = heap->heap->entries[idx].key, argMax = idx;
+    int parent = heap->heap->entries[parentIdx].key;
+    int sibling = (siblingIdx < heap->heap->size) ? heap->heap->entries[siblingIdx].key : INT_MIN;
+
+    if (max < parent) {
+        max = parent;
+        argMax = parentIdx;
+    }
+
+    if (max < sibling) {
+        max = sibling;
+        argMax = siblingIdx;
+    }
+
+    if (argMax != parentIdx) {
+        int tempKey = heap->heap->entries[parentIdx].key;
+        heap->heap->entries[parentIdx].key = heap->heap->entries[argMax].key;
+        heap->heap->entries[argMax].key = tempKey;
+
+        Data *tempObj= heap->heap->entries[parentIdx].obj;
+        heap->heap->entries[parentIdx].obj = heap->heap->entries[argMax].obj;
+        heap->heap->entries[argMax].obj = tempObj;
+    } else {
+        return 0;
+    }
+
+    return siftUp(heap, parentIdx);
+}
+
+MaxHeap *heapify(DynamicArray *arr) {
     MaxHeap *result = (MaxHeap *) malloc(sizeof(MaxHeap));
     result->heap = createNew();
     insertByKey(result->heap, INT_MIN, NULL); // ? dummy at 0th position for easier calculation.
@@ -61,7 +109,7 @@ MaxHeap *init(DynamicArray *arr) {
     }
 
     for(int i = result->heap->size / 2; i >= 1; --i) {
-        heapify(result, i);
+        siftDown(result, i);
     }
 
     return result;
@@ -73,7 +121,7 @@ Data *maximumElement(MaxHeap *heap) {
         return NULL;
     }
 
-    if (!heap->heap->size) {
+    if (heap->heap->size <= 1) {
         printf("Heap is empty.\n");
         return NULL;
     }
@@ -87,7 +135,7 @@ Data *extractMax(MaxHeap *heap) {
         return NULL;
     }
 
-    if (!heap->heap->size) {
+    if (heap->heap->size <= 1) {
         printf("Heap is empty.\n");
         return NULL;
     }
@@ -102,21 +150,18 @@ Data *extractMax(MaxHeap *heap) {
 
     Data *max = heap->heap->entries[heap->heap->size - 1].obj;
     deleteFromPosition(heap->heap, heap->heap->size - 1);
-    printf("Heap size: %d\n.", heap->heap->size);
-    heapify(heap, 1);
+    siftDown(heap, 1);
 
     return max;
 }
 
-int increaseKey(MaxHeap* heap, int idx, int newKey);
-
-int decreaseKey(MaxHeap* heap, int idx, int newKey) {
+int increaseKey(MaxHeap* heap, int idx, int newKey) {
     if (!heap || !heap->heap) {
         printf("Invalid heap configuration.\n");
         return 1;
     }
 
-    if (!heap->heap->size) {
+    if (heap->heap->size <= 1) {
         printf("Heap is empty.\n");
         return 1;
     }
@@ -126,18 +171,70 @@ int decreaseKey(MaxHeap* heap, int idx, int newKey) {
         return 1;
     }
 
-    if (heap->heap->entries[idx].key <= newKey) {
-        printf("Required: New key > current key.");
+    if (heap->heap->entries[idx].key > newKey) {
+        printf("Required: New key < current key.\n");
+        return 1;
+    }
+
+    heap->heap->entries[idx].key = newKey;
+    return siftUp(heap, idx);
+}
+
+int decreaseKey(MaxHeap* heap, int idx, int newKey) {
+    if (!heap || !heap->heap) {
+        printf("Invalid heap configuration.\n");
+        return 1;
+    }
+
+    if (heap->heap->size <= 1) {
+        printf("Heap is empty.\n");
+        return 1;
+    }
+
+    if (idx < 1 || idx > heap->heap->size) {
+        printf("Invalid index.\n");
+        return 1;
+    }
+
+    if (heap->heap->entries[idx].key < newKey) {
+        printf("Required: New key > current key.\n");
         return 1;
     }
 
     heap->heap->entries[idx].key = newKey; 
-    return heapify(heap, idx);
+    return siftDown(heap, idx);
     
 }
-int insertElement(MaxHeap *heap, int key);
-int deleteElement(MaxHeap *heap, int idx);
-void heapSort(DynamicArray *arr);
+
+int insertElement(MaxHeap *heap, int key, Data *obj) {
+    if (insertByKey(heap->heap, key, obj)) {
+        printf("Insert operation failed for the key: %d.\n", key);
+        return 1;
+    }
+
+    return siftUp(heap, heap->heap->size - 1);
+}
+
+int deleteElement(MaxHeap *heap, int idx) {
+    int tempKey = heap->heap->entries[idx].key;
+    heap->heap->entries[idx].key = heap->heap->entries[heap->heap->size - 1].key;
+    heap->heap->entries[heap->heap->size - 1].key = tempKey;
+
+    Data* tempObj = heap->heap->entries[idx].obj;
+    heap->heap->entries[idx].obj = heap->heap->entries[heap->heap->size - 1].obj;
+    heap->heap->entries[heap->heap->size - 1].obj = tempObj;
+
+    if (!deleteFromPosition(heap->heap, heap->heap->size - 1)) {
+        printf("Insert operation failed for the idx: %d.\n", idx);
+        return 1;
+    }
+
+    return siftDown(heap, idx);
+}
+
+void heapSort(DynamicArray *arr) {
+
+}
 
 int main() {
     DynamicArray *arr = createNew();
@@ -145,12 +242,35 @@ int main() {
         insertByKey(arr, i, createNewData(i));
     }
 
-    MaxHeap *heap = init(arr);
+    MaxHeap *heap = heapify(arr);
     traverse(heap->heap);
 
-    for (int i = 1; i <= 21; ++i) {
-        Data *max = extractMax(heap);
-        printf("Extracted Max: %d\n", max ? max->value : INT_MIN);
+    increaseKey(heap, 5, 42);
+    traverse(heap->heap);
+
+    Data *max = maximumElement(heap);
+    if (max) {
+        printf("Maximum element: %d\n", max->value);
+    }
+
+    for (int i = 1; i <= 25; ++i) {
+        max = extractMax(heap);
+        if (max) {
+            printf("Extracted Max: %d\n", max->value);
+        }
+    }
+    traverse(heap->heap);
+
+    for (int i = 45; i <= 70; ++i) {
+        insertElement(heap, i, createNewData(i));
+    }
+    traverse(heap->heap);
+
+    for (int i = 1; i <= 25; ++i) {
+        max = extractMax(heap);
+        if (max) {
+            printf("Extracted Max: %d\n", max->value);
+        }
     }
     traverse(heap->heap);
 
@@ -158,4 +278,3 @@ int main() {
 
     return 0;
 }
-

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include "doubly_linked_list.h"
 
 int isEmpty(DLL *list) {
