@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include "max_heap.h"
+#include "min_heap.h"
 #include "operations.h"
 
 static void swapEntries(DynamicArray *arr, int a, int b) {
@@ -10,7 +10,7 @@ static void swapEntries(DynamicArray *arr, int a, int b) {
     arr->entries[b] = temp;
 }
 
-int siftDown(MaxHeap *heap, int idx) {
+int siftDown(MinHeap *heap, int idx) {
     if (!heap || !heap->heap) {
         printf("Invalid heap configuration.\n");
         return 1;
@@ -24,34 +24,34 @@ int siftDown(MaxHeap *heap, int idx) {
     while (2 * idx < heap->heap->size) {
         int leftChildIdx = 2 * idx;
         int rightChildIdx = 2 * idx + 1;
-        int largest = idx;
+        int smallest = idx;
 
         if (
             leftChildIdx < heap->heap->size &&
-            heap->heap->entries[leftChildIdx].key > heap->heap->entries[largest].key
+            heap->heap->entries[leftChildIdx].key < heap->heap->entries[smallest].key
         ) {
-            largest = leftChildIdx;
+            smallest = leftChildIdx;
         }
 
         if (
             rightChildIdx < heap->heap->size &&
-            heap->heap->entries[rightChildIdx].key > heap->heap->entries[largest].key
+            heap->heap->entries[rightChildIdx].key < heap->heap->entries[smallest].key
         ) {
-            largest = rightChildIdx;
+            smallest = rightChildIdx;
         }
 
-        if (largest == idx) {
+        if (smallest == idx) {
             break;
         }
 
-        swapEntries(heap->heap, idx, largest);
-        idx = largest;
+        swapEntries(heap->heap, idx, smallest);
+        idx = smallest;
     }
 
     return 0;
 }
 
-int siftUp(MaxHeap *heap, int idx) {
+int siftUp(MinHeap *heap, int idx) {
     if (!heap || !heap->heap) {
         printf("Invalid heap configuration.\n");
         return 1;
@@ -64,7 +64,7 @@ int siftUp(MaxHeap *heap, int idx) {
 
     while (idx > 1) {
         int parentIdx = idx / 2;
-        if (heap->heap->entries[idx].key <= heap->heap->entries[parentIdx].key) {
+        if (heap->heap->entries[idx].key >= heap->heap->entries[parentIdx].key) {
             break;
         }
 
@@ -75,8 +75,8 @@ int siftUp(MaxHeap *heap, int idx) {
     return 0;
 }
 
-MaxHeap *heapify(DynamicArray *arr) {
-    MaxHeap *result = (MaxHeap *) malloc(sizeof(MaxHeap));
+MinHeap *heapify(DynamicArray *arr) {
+    MinHeap *result = (MinHeap *) malloc(sizeof(MinHeap));
     if (!result) {
         printf("Memory allocation failed.\n");
         return NULL;
@@ -106,7 +106,7 @@ MaxHeap *heapify(DynamicArray *arr) {
     return result;
 }
 
-Data *maximumElement(MaxHeap *heap) {
+Data *minimumElement(MinHeap *heap) {
     if (!heap || !heap->heap) {
         printf("Invalid heap configuration.\n");
         return NULL;
@@ -120,7 +120,7 @@ Data *maximumElement(MaxHeap *heap) {
     return heap->heap->entries[1].obj;
 }
 
-Data *extractMax(MaxHeap *heap) {
+Data *extractMin(MinHeap *heap) {
     if (!heap || !heap->heap) {
         printf("Invalid heap configuration.\n");
         return NULL;
@@ -131,7 +131,7 @@ Data *extractMax(MaxHeap *heap) {
         return NULL;
     }
 
-    Data *max = heap->heap->entries[1].obj;
+    Data *min = heap->heap->entries[1].obj;
     swapEntries(heap->heap, 1, heap->heap->size - 1);
     deleteFromPosition(heap->heap, heap->heap->size - 1);
 
@@ -139,10 +139,10 @@ Data *extractMax(MaxHeap *heap) {
         siftDown(heap, 1);
     }
 
-    return max;
+    return min;
 }
 
-int increaseKey(MaxHeap *heap, int idx, int newKey) {
+int increaseKey(MinHeap *heap, int idx, int newKey) {
     if (!heap || !heap->heap) {
         printf("Invalid heap configuration.\n");
         return 1;
@@ -164,10 +164,10 @@ int increaseKey(MaxHeap *heap, int idx, int newKey) {
     }
 
     heap->heap->entries[idx].key = newKey;
-    return siftUp(heap, idx);
+    return siftDown(heap, idx);
 }
 
-int decreaseKey(MaxHeap *heap, int idx, int newKey) {
+int decreaseKey(MinHeap *heap, int idx, int newKey) {
     if (!heap || !heap->heap) {
         printf("Invalid heap configuration.\n");
         return 1;
@@ -189,10 +189,10 @@ int decreaseKey(MaxHeap *heap, int idx, int newKey) {
     }
 
     heap->heap->entries[idx].key = newKey;
-    return siftDown(heap, idx);
+    return siftUp(heap, idx);
 }
 
-int insertElement(MaxHeap *heap, int key, Data *obj) {
+int insertElement(MinHeap *heap, int key, Data *obj) {
     if (!heap || !heap->heap) {
         printf("Invalid heap configuration.\n");
         return 1;
@@ -206,7 +206,7 @@ int insertElement(MaxHeap *heap, int key, Data *obj) {
     return siftUp(heap, heap->heap->size - 1);
 }
 
-int deleteElement(MaxHeap *heap, int idx) {
+int deleteElement(MinHeap *heap, int idx) {
     if (!heap || !heap->heap) {
         printf("Invalid heap configuration.\n");
         return 1;
@@ -229,7 +229,7 @@ int deleteElement(MaxHeap *heap, int idx) {
 
     if (idx < heap->heap->size && idx > 1) {
         int parentIdx = idx / 2;
-        if (heap->heap->entries[idx].key > heap->heap->entries[parentIdx].key) {
+        if (heap->heap->entries[idx].key < heap->heap->entries[parentIdx].key) {
             return siftUp(heap, idx);
         }
     }
@@ -251,22 +251,22 @@ int main() {
         insertByKey(arr, i, createNewData(i));
     }
 
-    MaxHeap *heap = heapify(arr);
+    MinHeap *heap = heapify(arr);
     traverse(heap->heap);
 
     increaseKey(heap, 5, 42);
     decreaseKey(heap, 7, 2);
     traverse(heap->heap);
 
-    Data *max = maximumElement(heap);
-    if (max) {
-        printf("Maximum element: %d\n", max->value);
+    Data *min = minimumElement(heap);
+    if (min) {
+        printf("Minimum element: %d\n", min->value);
     }
 
     for (int i = 1; i <= 25; ++i) {
-        max = extractMax(heap);
-        if (max) {
-            printf("Extracted Max: %d\n", max->value);
+        min = extractMin(heap);
+        if (min) {
+            printf("Extracted Min: %d\n", min->value);
         }
     }
     traverse(heap->heap);
@@ -277,9 +277,9 @@ int main() {
     traverse(heap->heap);
 
     for (int i = 1; i <= 25; ++i) {
-        max = extractMax(heap);
-        if (max) {
-            printf("Extracted Max: %d\n", max->value);
+        min = extractMin(heap);
+        if (min) {
+            printf("Extracted Min: %d\n", min->value);
         }
     }
     traverse(heap->heap);
