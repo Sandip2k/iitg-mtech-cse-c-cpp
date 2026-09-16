@@ -241,8 +241,35 @@ int deleteElement(MinHeap *heap, int idx) {
     return 0;
 }
 
+/*
+ * In-place heap sort using MinHeap. The sorted order will be in descending order.
+*/
 void heapSort(DynamicArray *arr) {
-    (void)arr;
+    MinHeap *heap = (MinHeap *) malloc(sizeof(MinHeap));
+
+    if (!heap) {
+        printf("Memory allocation failed.\n");
+        return;
+    }
+
+    heap->heap = arr;
+    insertByKeyAtPosition(heap->heap, INT_MIN, NULL, 0);
+    int originalSize = arr->size;
+
+    for (int i = heap->heap->size / 2; i >= 1; --i) {
+        siftDown(heap, i);
+    }
+
+    traverse(heap->heap);
+
+    for (int i = heap->heap->size - 1; i > 0; --i) {
+        swapEntries(heap->heap, 1, i);
+        heap->heap->size--;
+        siftDown(heap, 1);
+    }
+
+    heap->heap->size = originalSize;
+    deleteFromPosition(heap->heap, 0);
 }
 
 int main() {
@@ -285,6 +312,18 @@ int main() {
     traverse(heap->heap);
 
     printf("Size: %d\n", heap->heap->size);
+
+    DynamicArray *arr2 = createNew();
+    insertByKey(arr2, 5, NULL);
+    insertByKey(arr2, 1, NULL);
+    insertByKey(arr2, -2, NULL);
+    insertByKey(arr2, 5, NULL);
+    insertByKey(arr2, 7, NULL);
+    insertByKey(arr2, 12, NULL);
+    insertByKey(arr2, 3, NULL);
+
+    heapSort(arr2);
+    traverse(arr2);
 
     return 0;
 }
