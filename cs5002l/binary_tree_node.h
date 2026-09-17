@@ -4,7 +4,8 @@
 #include "data.h"
 
 typedef struct BinaryTreeNode {
-    Data *key;
+    int key;
+    Data *data;
     struct BinaryTreeNode *left;
     struct BinaryTreeNode *right;
     struct BinaryTreeNode *parent;
@@ -12,7 +13,7 @@ typedef struct BinaryTreeNode {
 
 typedef BinaryTreeNode BTNode;
 
-BinaryTreeNode *createNewNode(Data *key);
+BinaryTreeNode *createNewNode(int key, Data *data);
 void deleteNode(BinaryTreeNode *node);
 
 #endif

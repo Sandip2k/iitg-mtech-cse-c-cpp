@@ -1,18 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
 #include "binary_tree_node.h"
 
 int isLeaf(BTNode *node) {
     return !node->left && !node->right;
 }
 
-BTNode *createTree(Data *key) {
-    return createNewNode(key);
+BTNode *createTree(int key, Data *data) {
+    return createNewNode(key, data);
 }
 
-BTNode *makeTree(Data *key, BTNode *left, BTNode *right) {
-    BTNode *root = createNewNode(key);
+BTNode *makeTree(int key, Data *data, BTNode *left, BTNode *right) {
+    BTNode *root = createNewNode(key, data);
     left->parent = root;
     right->parent = root;
     root->left = left;
@@ -38,13 +37,13 @@ BTNode *getRightNode(BTNode *node) {
 
 // flag for left or right if child is already present.
 // flag = 1 for left child, flag = 0 for right child.
-int insertLeftNode(BTNode *node, Data *key, int flag) {
+int insertLeftNode(BTNode *node, int key, Data *data, int flag) {
     if (!node) {
         printf("Invalid node.\n");
         return 0;
     }
 
-    BTNode *newNode = createNewNode(key);
+    BTNode *newNode = createNewNode(key, data);
 
     if (node->left) {
         node->left->parent = newNode;
@@ -62,13 +61,13 @@ int insertLeftNode(BTNode *node, Data *key, int flag) {
 
 // flag for left or right if child is already present.
 // flag = 1 for left child, flag = 0 for right child.
-int insertRightNode(BTNode *node, Data *key, int flag) {
+int insertRightNode(BTNode *node, int key, Data *data, int flag) {
     if (!node) {
         printf("Invalid node.\n");
         return 0;
     }
 
-    BTNode *newNode = createNewNode(key);
+    BTNode *newNode = createNewNode(key, data);
 
     if (node->right) {
         node->right->parent = newNode;
@@ -89,7 +88,7 @@ void preOrder(BTNode *node) {
         return;
     }
 
-    printf("%d ", node->key ? node->key->value : INT_MIN);
+    printf("%d ", node->key);
     preOrder(node->left);
     preOrder(node->right);
 }
@@ -100,7 +99,7 @@ void inOrder(BTNode *node) {
     }
 
     inOrder(node->left);
-    printf("%d ", node->key ? node->key->value : INT_MIN);
+    printf("%d ", node->key);
     inOrder(node->right);
 }
 
@@ -111,7 +110,7 @@ void postOrder(BTNode *node) {
 
     postOrder(node->left);
     postOrder(node->right);
-    printf("%d ", node->key ? node->key->value : INT_MIN);
+    printf("%d ", node->key);
 }
 
 int equal(BTNode *a, BTNode *b) {
@@ -124,19 +123,19 @@ int equal(BTNode *a, BTNode *b) {
     }
 
     return 
-        (a->key && b->key && a->key->value == b->key->value) &&
+        a->key == b->key &&
         equal(a->left, b->left) &&
         equal(a->right, b->right);
 }
 
 int main() {
-    BTNode *left = createTree(createNewData(2));
-    BTNode *right = createTree(createNewData(3));
-    BTNode *root = makeTree(createNewData(1), left, right);
-    insertLeftNode(root, createNewData(4), 1);
-    insertLeftNode(root, createNewData(5), 0);
-    insertRightNode(root, createNewData(6), 0);
-    insertRightNode(root, createNewData(7), 1);
+    BTNode *left = createTree(2, createNewData(2));
+    BTNode *right = createTree(3, createNewData(3));
+    BTNode *root = makeTree(1, createNewData(1), left, right);
+    insertLeftNode(root, 4, createNewData(4), 1);
+    insertLeftNode(root, 5, createNewData(5), 0);
+    insertRightNode(root, 6, createNewData(6), 0);
+    insertRightNode(root, 7, createNewData(7), 1);
 
     preOrder(root);
     printf("\n");
