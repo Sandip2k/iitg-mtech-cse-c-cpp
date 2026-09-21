@@ -73,3 +73,6 @@ Testing/
 
 # rough testing & ideas
 rough/
+
+# Macbook temp object folders
+*.dSYM/

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "constants.h"
 #include "binary_search_tree.h"
 
 static int isLeaf(BTNode *node) {
@@ -213,8 +214,80 @@ void deleteBSTNode(BST *bst, int key) {
     free(searchResult); // only free the node, not the data, as the data might be used elsewhere.
 }
 
+/*
+* Assuming all the nodes in bst1 <= all the nodes in bst2.
+*/
 BST *join(BST *bst1, BST *bst2) {
-    return NULL;
+    if (!bst1 || !bst1->root) {
+        return bst2;
+    }
+
+    if (!bst2 || !bst2->root) {
+        return bst1;
+    }
+
+    BTNode *curr = bst1->root;
+    while (curr && curr->right) {
+        curr = curr->right;
+    }
+
+    if (curr->parent) {
+        if (curr->left) {
+            curr->parent->right = curr->left;
+            curr->left->parent = curr->parent;
+        } else {
+            curr->parent->right = NULL;
+        }
+    } else {
+        bst1->root = curr->left;
+        if (bst1->root) {
+            bst1->root->parent = NULL;
+        }
+    }
+    
+    curr->parent = NULL;
+    curr->left = bst1->root;
+    if (bst1->root) {
+        bst1->root->parent = curr;
+    }
+
+    curr->right = bst2->root;
+    if (bst2->root) {
+        bst2->root->parent = curr;
+    }
+
+    BST *result = createNewBST();
+    result->root = curr;
+    return result;
+}
+
+BST **split(BST *bst, int key) {
+    BST **res = (BST **) malloc(2 * sizeof(BST *));
+    res[0] = createNewBST();
+    res[1] = createNewBST();
+
+    BTNode *curr = bst->root;
+
+    while (curr) {
+        BTNode *next = NULL;
+        if (curr->key <= key) {
+            next = curr->right;
+            curr->right = res[0]->root;
+            if (res[0]->root) res[0]->root->parent = curr;
+            curr->parent = NULL;
+            res[0]->root = curr;
+        } else {
+            next = curr->left;
+            curr->left = res[1]->root;
+            if (res[1]->root) res[1]->root->parent = curr;
+            curr->parent = NULL;
+            res[1]->root = curr;
+        }
+        curr = next;
+    }
+
+    bst->root = NULL;
+    return res;
 }
 
 void inOrderTraversal(BST *bst) {
@@ -244,6 +317,18 @@ int main() {
     insertBSTNode(bst, -1, createNewData(-1));
     insertBSTNode(bst, 6, createNewData(6));
     insertBSTNode(bst, 10, createNewData(10));
+
+    BST *bst1 = createNewBST();
+    insertBSTNode(bst1, 2, createNewData(2));
+    insertBSTNode(bst1, 1, createNewData(1));
+    insertBSTNode(bst1, 3, createNewData(3));
+
+    BST *bst2 = createNewBST();
+    insertBSTNode(bst2, 6, createNewData(6));
+    insertBSTNode(bst2, 5, createNewData(5));
+    insertBSTNode(bst2, 3, createNewData(3));
+    insertBSTNode(bst2, 4, createNewData(4));
+    insertBSTNode(bst2, 9, createNewData(9));
 
     preOrderTraversal(bst);
     printf("\n");
@@ -284,6 +369,22 @@ int main() {
     deleteBSTNode(bst, 1);
     printf("\nAfter deleting 1:\n");
     inOrderTraversal(bst);
+
+    BST *result = join(bst1, bst2);
+    printf("\n");
+    preOrderTraversal(result);
+    printf("\n");
+    inOrderTraversal(result);
+
+    BST **splitResult = split(bst, 2);
+    printf("\n");
+    preOrderTraversal(splitResult[0]);
+    printf("\n");
+    inOrderTraversal(splitResult[0]);
+    printf("\n");
+    preOrderTraversal(splitResult[1]);
+    printf("\n");
+    inOrderTraversal(splitResult[1]);
 
     return 0;
 }
